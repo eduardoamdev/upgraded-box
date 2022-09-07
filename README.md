@@ -28,6 +28,26 @@ Cuando desplegamos por primera vez un smart contract actualizable lo que en real
 
 Como se veía en el esquema anterior, el contrato de admin y el proxy están vinculados siendo el proxy, a su vez, la puerta de entrada al contrato de implementación.
 
+## Tarea 1: Generar el entorno de desarrollo de Hardhat:
+
+### Tarea 1.1: Crear el esqueleto de Hardhat:
+
+Nota: si estamos trabajando con la versión 18 de NodeJS y nos aparece el error < Error HH604: Error running JSON-RPC server: error:0308010C:digital envelope routines::unsupported > debemos ejecutar en la terminal el comando: export NODE_OPTIONS=--openssl-legacy-provider.
+
+- Lo primero que haremos será crear un directorio (donde mejor nos venga) y acceder a su interior mediante la terminal de comandos.
+
+- Una vez dentro del directorio inicializaremos un proyecto con el comando < npm init >.
+
+- Una vez se nos haya creado el package.json estaremos en disposición de instalar Hardhat ejecutando < npm i hardhat >.
+
+- Lo siguiente será generar el entorno de desarrollo de Hardhat mediante el comando < npx hardhat node >. Se nos irán ofreciendo varias opciones. es importante para seguir este tutorial de una manera sencilla que, cuando se nos pregunte entre Javascript y Typescript, elegir Typescript.
+
+### Tarea 2.2: Arrancar un nodo de Hardhat:
+
+- Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un node de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
+
+<img src="./readme-images/hardhat-node.png" alt="hardhat-node" />
+
 Comandos de Hardhat:
 
 npx hardhat node
