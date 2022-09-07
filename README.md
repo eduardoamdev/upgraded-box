@@ -1,6 +1,6 @@
 # Upgraded Box
 
-<img src="./readme-images/open-zeppelin.png" alt="open-zeppelin" />
+<img src="./readme-images/open-zeppeli.png" alt="open-zeppelin" />
 
 Este mini-proyecto está basado en siguiente artículo: https://dev.to/yakult/tutorial-write-upgradeable-smart-contract-proxy-contract-with-openzeppelin-1916.
 El propósito consiste en aprender como hacer upgrades de contratos de Solidity con la ayuda de la librería @openzeppelin/hardhat-upgrades.
