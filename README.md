@@ -14,7 +14,7 @@ El proceso de construcción de este proyecto está dividido en 7 tareas dividida
 
 Para ilustrar como se estructuran esta clase de contratos vamos a echar mano de una imágen del artículo que hemos mencionado en la descripción.
 
-<img src="./readme-images/upgradeable-structure.png" alt="upgradeable-structure" />
+<img src="./readme-images/upgradeable-structure.jpeg" alt="upgradeable-structure" />
 
 Comandos de Hardhat:
 
