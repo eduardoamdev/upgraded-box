@@ -42,11 +42,21 @@ Nota: si estamos trabajando con la versión 18 de NodeJS y nos aparece el error 
 
 - Lo siguiente será generar el entorno de desarrollo de Hardhat mediante el comando < npx hardhat node >. Se nos irán ofreciendo varias opciones. es importante para seguir este tutorial de una manera sencilla que, cuando se nos pregunte entre Javascript y Typescript, elegir Typescript.
 
-### Tarea 2.2: Arrancar un nodo de Hardhat:
+### Tarea 1.2: Arrancar un nodo de Hardhat:
 
-- Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un node de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
+Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un node de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
 
 <img src="./readme-images/hardhat-node.png" alt="hardhat-node" />
+
+### Tarea 1.3: Compilar el contrato que viene por defecto:
+
+En el esqueleto que nos ha creado Hardhat aparece un contrato Lock.sol creado por defecto.
+
+Para ello utilizaremos el comando < npx hardhat compile >
+
+### Tarea 1.4: Desplegar el contrato en nuestro nodo local:
+
+Ejecutaremos el comando npx hardhat run --network localhost scripts/deploy.ts
 
 Comandos de Hardhat:
 
