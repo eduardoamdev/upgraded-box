@@ -1,4 +1,4 @@
-### Upgraded Box
+# Upgraded Box
 
 <img src="./readme-images/open-zeppelin.png" alt="open-zeppelin" />
 
