@@ -28,9 +28,9 @@ Cuando desplegamos por primera vez un smart contract actualizable lo que en real
 
 Como se veía en el esquema anterior, el contrato de admin y el proxy están vinculados siendo el proxy, a su vez, la puerta de entrada al contrato de implementación.
 
-## Tarea 1: Generar el entorno de desarrollo de Hardhat:
+## Tarea 1: Generar el entorno de desarrollo de Hardhat (si ya tienes experiencia trabajando con Hardhat puedes saltar esta primera tarea).
 
-### Tarea 1.1: Crear el esqueleto de Hardhat:
+### Tarea 1.1: Crear el esqueleto de Hardhat.
 
 Nota: si estamos trabajando con la versión 18 de NodeJS y nos aparece el error < Error HH604: Error running JSON-RPC server: error:0308010C:digital envelope routines::unsupported > debemos ejecutar en la terminal el comando: export NODE_OPTIONS=--openssl-legacy-provider.
 
@@ -42,13 +42,13 @@ Nota: si estamos trabajando con la versión 18 de NodeJS y nos aparece el error 
 
 - Lo siguiente será generar el entorno de desarrollo de Hardhat mediante el comando < npx hardhat node >. Se nos irán ofreciendo varias opciones. es importante para seguir este tutorial de una manera sencilla que, cuando se nos pregunte entre Javascript y Typescript, elegir Typescript.
 
-### Tarea 1.2: Arrancar un nodo de Hardhat:
+### Tarea 1.2: Arrancar un nodo de Hardhat.
 
 Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un nodo de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
 
 <img src="./readme-images/hardhat-node.png" alt="hardhat-node" />
 
-### Tarea 1.3: Cambiar el contrato que viene por defecto por otro más simple:
+### Tarea 1.3: Cambiar el contrato que viene por defecto por otro más simple.
 
 En el esqueleto que nos ha creado Hardhat aparece un contrato Lock.sol creado por defecto. Vamos a cambiar este contrato para que simplificarlo y que se parezca lo máximo posible al que vamos a utilizar posteriormente para el ejercicio.
 
@@ -72,7 +72,7 @@ contract Box {
 }
 ```
 
-### Tarea 1.4: Compilar el contrato:
+### Tarea 1.4: Compilar el contrato.
 
 Para compilar nuestro contrato utilizaremos el comando < npx hardhat compile >.
 
@@ -129,7 +129,7 @@ Se nos generará una carpeta llamada artifacts que contiene a su vez un director
 }
 ```
 
-### Tarea 1.4: Desplegar el contrato en nuestro nodo local:
+### Tarea 1.4: Desplegar el contrato en nuestro nodo local.
 
 El despliegue lo realizaremos mediante la ejecución del archivo deploy.ts que se encuentra en la carpeta scripts.
 
@@ -171,7 +171,7 @@ Al mismo tiempo, tiene que aparecer en la terminal en la que hemos ejecutado el 
 
 <img src="./readme-images/deployment-message.png" alt="deployment-message" />
 
-### Tarea 1.5: Comprobar en la consola de Hardhat el correcto funcionamiento del contrato:
+### Tarea 1.5: Comprobar en la consola de Hardhat el correcto funcionamiento del contrato.
 
 En otra terminal ejecutaremos en comando < npx hardhat console --network localhost >
 
