@@ -16,6 +16,14 @@ Para ilustrar como se estructuran esta clase de contratos vamos a echar mano de 
 
 <img src="./readme-images/upgradeable-structure.jpeg" alt="upgradeable-structure" />
 
+Un smart contract actualizable consta de tres contratos a su vez:
+
+- Contrato proxy (proxy contract): Es al que apuntará cualquier cliente que quiere interactuar con el contrato. Su address siempre es la misma en las sucesivas actualizaciones. Es también el responsable de conservar la información en memoria.
+
+- Contrato proxy de administración (proxy admin contract): La address de este contrato, al igual que la del anterior, tampoco variará entre las sucesivas actualizaciones. Su función en este ejercicio será la de proporcionarnos una interfaz con la que poder actuar para hacer ciertas actulizaciones en el contrato proxy por medio de Etherscan. Podríamos decir que este contrato proxy admin actúa como el owner del proxy.
+
+- Contrato de implementación (implementation contract): Este contrato es el que contiene la lógica. Viene a ser el smart contract que el desarrollador programa.
+
 Comandos de Hardhat:
 
 npx hardhat node
