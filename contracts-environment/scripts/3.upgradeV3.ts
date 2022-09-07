@@ -1,0 +1,29 @@
+// scripts/3.upgradeV3.ts
+import { ethers } from "hardhat";
+import { upgrades } from "hardhat";
+
+/* const proxyAddress = "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0"; */
+
+const proxyAddress = "0xE7C274005713912aA3639B99Ab3E0435e24fA44f";
+
+async function main() {
+  console.log(proxyAddress, " original Box(proxy) address");
+  const BoxV3 = await ethers.getContractFactory("BoxV3");
+  console.log("upgrade to BoxV3...");
+  const boxV3 = await upgrades.upgradeProxy(proxyAddress, BoxV3);
+  console.log(boxV3.address, " BoxV3 address(should be the same)");
+
+  console.log(
+    await upgrades.erc1967.getImplementationAddress(boxV3.address),
+    " getImplementationAddress"
+  );
+  console.log(
+    await upgrades.erc1967.getAdminAddress(boxV3.address),
+    " getAdminAddress"
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
