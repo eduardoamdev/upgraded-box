@@ -44,30 +44,150 @@ Nota: si estamos trabajando con la versión 18 de NodeJS y nos aparece el error 
 
 ### Tarea 1.2: Arrancar un nodo de Hardhat:
 
-Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un node de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
+Si volvemos a ejecutar el comando < npx hardhat node > se nos arrancará un nodo de Hardhat y, en la terminal, se nos mostrarán una serie de pares de claves que se nos proporcionarán por defecto.
 
 <img src="./readme-images/hardhat-node.png" alt="hardhat-node" />
 
-### Tarea 1.3: Compilar el contrato que viene por defecto:
+### Tarea 1.3: Cambiar el contrato que viene por defecto por otro más simple:
 
-En el esqueleto que nos ha creado Hardhat aparece un contrato Lock.sol creado por defecto.
+En el esqueleto que nos ha creado Hardhat aparece un contrato Lock.sol creado por defecto. Vamos a cambiar este contrato para que simplificarlo y que se parezca lo máximo posible al que vamos a utilizar posteriormente para el ejercicio.
 
-Para ello utilizaremos el comando < npx hardhat compile >
+Vamos a cambiar el nombre del contrato contrato por Box.sol y el código va a ser el siguiente:
+
+```js
+// contracts/Box.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Box {
+    uint256 private value;
+
+    constructor(uint256 newValue) {
+        value = newValue;
+    }
+
+    function retrieve() public view returns (uint256) {
+        return value;
+    }
+}
+```
+
+### Tarea 1.4: Compilar el contrato:
+
+Para compilar nuestro contrato utilizaremos el comando < npx hardhat compile >.
+
+Se nos generará una carpeta llamada artifacts que contiene a su vez un directorio llamado contracts dentro del cual se encuentra el .json del contrato.
+
+```js
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Box",
+  "sourceName": "contracts/Box.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newValue",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "ValueChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "retrieve",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161016b38038061016b8339818101604052810190610032919061007a565b80600081905550506100a7565b600080fd5b6000819050919050565b61005781610044565b811461006257600080fd5b50565b6000815190506100748161004e565b92915050565b6000602082840312156100905761008f61003f565b5b600061009e84828501610065565b91505092915050565b60b6806100b56000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80632e64cec114602d575b600080fd5b60336047565b604051603e91906067565b60405180910390f35b60008054905090565b6000819050919050565b6061816050565b82525050565b6000602082019050607a6000830184605a565b9291505056fea26469706673582212203ab95319930035d477a42d36ca635ae4ffe6ec17482f4501dd3a6f85686e826e64736f6c63430008090033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c80632e64cec114602d575b600080fd5b60336047565b604051603e91906067565b60405180910390f35b60008054905090565b6000819050919050565b6061816050565b82525050565b6000602082019050607a6000830184605a565b9291505056fea26469706673582212203ab95319930035d477a42d36ca635ae4ffe6ec17482f4501dd3a6f85686e826e64736f6c63430008090033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
+```
 
 ### Tarea 1.4: Desplegar el contrato en nuestro nodo local:
 
-Ejecutaremos el comando npx hardhat run --network localhost scripts/deploy.ts
+El despliegue lo realizaremos mediante la ejecución del archivo deploy.ts que se encuentra en la carpeta scripts.
 
-Comandos de Hardhat:
+El código que debe contener es el siguiente:
 
-npx hardhat node
+```js
+import { ethers } from "hardhat";
 
-npx hardhat run scripts/1.deploy_box.ts --network localhost
+async function main() {
+  const Box = await ethers.getContractFactory("Box");
+  const box = await Box.deploy(5);
 
-npx hardhat run scripts/2.upgradeV2.ts --network localhost
+  await box.deployed();
 
-npx hardhat run scripts/3.upgradeV3.ts --network localhost
+  console.log(`Contract deployed to the following address ${box.address}`);
+}
 
-npx hardhat run scripts/4.prepareV4.ts --network localhost
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
 
-npx hardhat console --network localhost
+Este script hace lo siguiente:
+
+- Importamos una función ethers (en este caso la implementación de hardhat).
+
+- Declaramos una función main. Dentro de main está la llamada al contrato y el despliegue del mismo pasándole el parámetro que requería el constructor (recordemos que era un uint256 para darle un valor a la propiedad value).
+
+- Por último viene el llamado a la función main. Es aquí cuando se despliega el contrato.
+
+Una vez configurado el archivo podemos ejecutar el despliegue con el comando < npx hardhat run scripts/deploy.ts --network localhost >
+
+Si el proceso se ha producido correctamente veremos en la terminal en la que está arrancado en nodo la siguiente información:
+
+<img src="./readme-images/contract-deploy.png" alt="contract-deploy" />
+
+Al mismo tiempo, tiene que aparecer en la terminal en la que hemos ejecutado el comando de despliegue el siguiente mensaje:
+
+<img src="./readme-images/deployment-message.png" alt="deployment-message" />
+
+### Tarea 1.5: Comprobar en la consola de Hardhat el correcto funcionamiento del contrato:
+
+En otra terminal ejecutaremos en comando < npx hardhat console --network localhost >
+
+Esto nos abre la consola de Hardhat.
+
+Lo siguiente que haremos será llamar al contrato, instanciarlo, llamar nuestro método retrieve para guardar el valor que devuelve en una constante y, por último, imprimir el valor de la constante por consola.
+
+La secuencia completa quedaría de la siguiente forma:
+
+```js
+> const Box = await ethers.getContractFactory("Box")
+undefined
+> const box = await Box.attach("0x5FbDB2315678afecb367f032d93F642f64180aa3")
+undefined
+> const value = await box.retrieve()
+undefined
+> value
+BigNumber { value: "5" }
+```
