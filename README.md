@@ -8,7 +8,7 @@ Este mini-proyecto está basado en siguiente artículo: https://dev.to/yakult/tu
 
 El propósito consiste en aprender como hacer upgrades de contratos de Solidity con la ayuda de la librería @openzeppelin/hardhat-upgrades.
 
-El proceso de construcción de este proyecto está dividido en 7 tareas divididas a su vez en varias subtareas.
+El proceso de construcción de este proyecto está dividido en varias tareas divididas a su vez en varias subtareas.
 
 ## Funcionamiento de un smart contract actualizable:
 
@@ -271,7 +271,47 @@ Para llevar a cabo el test ejecutarmos el comando < npx hardhat test test/1.Box.
 
 ## Tarea 3: Desplegar nuestro contrato como actualizable.
 
-### Tarea 3.1: Crear script de despliegue.
+### Tarea 3.1: Hacer un test del contrato desplegado como proxy.
+
+Vamos a crear un archivo llamado 2.BoxProxy.test.ts en la carpeta test.
+
+En el archivo que acabamos de crear pegaremos el siguiente código:
+
+```js
+// test/2.BoxProxy.test.ts
+import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box (proxy)", function () {
+  let box: Contract;
+
+  beforeEach(async function () {
+    const Box = await ethers.getContractFactory("Box");
+    //initialize with 42
+    box = await upgrades.deployProxy(Box, [42], { initializer: "store" });
+  });
+
+  it("should retrieve value previously stored", async function () {
+    // console.log(box.address," box(proxy)")
+    // console.log(await upgrades.erc1967.getImplementationAddress(box.address)," getImplementationAddress")
+    // console.log(await upgrades.erc1967.getAdminAddress(box.address), " getAdminAddress")
+
+    expect(await box.retrieve()).to.equal(BigNumber.from("42"));
+
+    await box.store(100);
+    expect(await box.retrieve()).to.equal(BigNumber.from("100"));
+  });
+});
+```
+
+Para ejecutar el test utilizaremos el comando < npx hardhat test test/2.BoxProxy.test.ts >.
+
+El test debe devolvernos el siguiente resultado:
+
+<img src="./readme-images/test-1-proxy.png" alt="test-1-proxy" />
+
+### Tarea 3.2: Crear script de despliegue.
 
 Dentro de la carpeta scripts crearemos un archivo llamado 1.deploy_box.ts y en el pegaremos el siguiente código:
 
@@ -304,7 +344,7 @@ main().catch((error) => {
 
 Un detalle a tener en cuenta es que, a diferencia de lo que hicimos en el anterior despliegue (en el que utilizamos el método deploy), en este caso hemos empleado el método deployProxy de upgrades. A este método le pasamos como argumentos el contrato que vamos a desplegar, el valor de le vamos a dar al initializer (podríamos decir que este initializer es nuestro constructor) y como tercer argumento un objecto con la propiedad initializer en la que declararemos cual sera dicho método.
 
-### Tarea 3.1: Ejecutar el script de despliegue.
+### Tarea 3.3: Ejecutar el script de despliegue.
 
 Arrancaremos un nuevo nodo de hardhat con < npx hardhat node >.
 
@@ -315,3 +355,190 @@ En este caso, al ser un contrato proxy vemos en la terminal que se han desplegad
 <img src="./readme-images/proxy-deploy-1.png" alt="proxy-deploy-1" />
 
 Aquí podemos ver como tenemos el contrato proxy, el proxyAdmin y la implementación.
+
+### Tarea 3.4: Comprobar con la consola el funcionamiento del contrato.
+
+El proceso es similar al descrito anteriormente. En este caso hay que tener en cuenta que debemos apuntar al contrato proxy y que nos devolverá el valor que le pasamos con argumento de upgrades.deployProxy (en el ejemplo le hemos pasado el número 42).
+
+<img src="./readme-images/proxy-1-console.png" alt="proxy-1-console" />
+
+## Tarea 4: Actualizar el smart contract a BoxV2.
+
+### Tarea 4.1: Crear un archivo con el código de la nueva implementación.
+
+Crearemos un archivo llamado BoxV2.sol y pegaremos en el el siguiente código:
+
+```js
+// contracts/BoxV2.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "./Box.sol";
+
+contract BoxV2 is Box{
+    // Increments the stored value by 1
+    function increment() public {
+        store(retrieve()+1);
+    }
+}
+```
+
+En esta actualización del contrato vamos a implementar un nuevo método que increméntará en uno el valor de la variable value.
+
+La idea es que BoxV2 heredará del contrato Box.
+
+### Tarea 4.2: Testear esta nueva implementación como un contrato normal.
+
+En el directorio test crearemos un archivo llamado 3.BoxV2.test.ts y pegaremos el siguiente código:
+
+```js
+// test/3.BoxV2.test.ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box V2", function () {
+  let boxV2: Contract;
+
+  beforeEach(async function () {
+    const BoxV2 = await ethers.getContractFactory("BoxV2");
+    boxV2 = await BoxV2.deploy();
+    await boxV2.deployed();
+  });
+
+  it("should retrieve value previously stored", async function () {
+    await boxV2.store(42);
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("42"));
+
+    await boxV2.store(100);
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
+  });
+
+  it("should increment value correctly", async function () {
+    await boxV2.store(42);
+    await boxV2.increment();
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("43"));
+  });
+});
+```
+
+Para lanzar el test ejecutaremos el comando < npx hardhat test test/3.BoxV2.test.ts > obteniendo el siguiente resultado:
+
+<img src="./readme-images/test-2-normal.png" alt="test-2-normal" />
+
+### Tarea 4.3: Testear esta nueva implementación como un contrato actualizable.
+
+Creamos en el directorio test un archivo llamado 4.BoxProxyV2.test.ts y copiamos el siguiente código:
+
+```js
+// test/4.BoxProxyV2.test.ts
+import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box (proxy) V2", function () {
+  let box: Contract;
+  let boxV2: Contract;
+
+  beforeEach(async function () {
+    const Box = await ethers.getContractFactory("Box");
+    const BoxV2 = await ethers.getContractFactory("BoxV2");
+
+    //initilize with 42
+    box = await upgrades.deployProxy(Box, [42], { initializer: "store" });
+    // console.log(box.address," box/proxy")
+    // console.log(await upgrades.erc1967.getImplementationAddress(box.address)," getImplementationAddress")
+    // console.log(await upgrades.erc1967.getAdminAddress(box.address), " getAdminAddress")
+
+    boxV2 = await upgrades.upgradeProxy(box.address, BoxV2);
+    // console.log(boxV2.address," box/proxy after upgrade")
+    // console.log(await upgrades.erc1967.getImplementationAddress(boxV2.address)," getImplementationAddress after upgrade")
+    // console.log(await upgrades.erc1967.getAdminAddress(boxV2.address)," getAdminAddress after upgrade")
+  });
+
+  it("should retrieve value previously stored and increment correctly", async function () {
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("42"));
+
+    await boxV2.increment();
+    //result = 42 + 1 = 43
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("43"));
+
+    await boxV2.store(100);
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
+  });
+});
+```
+
+Podemos ver como para este test desplegamos tanto el contrato proxy como la implementación BoxV2.
+
+Tras ejecutar el comando npx hardhat test test/4.BoxProxyV2.test.ts obtendremos el siguiente resultado:
+
+<img src="./readme-images/test-2-upgradeable.png" alt="test-2-upgradeable" />
+
+### Tarea 4.4: Crear el script de despliege para nuestra implementación.
+
+Creamos en la carpeta scripts un archivo llamado 2.upgradeV2.ts.
+
+```js
+// scripts/2.upgradeV2.ts
+import { ethers } from "hardhat";
+import { upgrades } from "hardhat";
+
+const proxyAddress = "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0";
+
+async function main() {
+  console.log(proxyAddress, " original Box(proxy) address");
+  const BoxV2 = await ethers.getContractFactory("BoxV2");
+  console.log("upgrade to BoxV2...");
+  const boxV2 = await upgrades.upgradeProxy(proxyAddress, BoxV2);
+  console.log(boxV2.address, " BoxV2 address(should be the same)");
+
+  console.log(
+    await upgrades.erc1967.getImplementationAddress(boxV2.address),
+    " getImplementationAddress"
+  );
+  console.log(
+    await upgrades.erc1967.getAdminAddress(boxV2.address),
+    " getAdminAddress"
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+Vemos como guardamos en una constante la address de nuestro contrato proxy para posteriormente pasársela al método upgradeProxy junto con la instancia de la nueva implementación.
+
+### Tarea 4.5: Desplegar la nueva implementación como upgrade de Box.sol.
+
+- Arrancaremos el nodo de Hardhat con < npx hardhat node >.
+
+- Desplegamos el proxy con el comando < npx hardhat run scripts/1.deploy_box.ts --network localhost >. Se nos tienen que haber desplegado los contratos con las mismas address que tenían anteriormente.
+
+- Desplegar la nueva implementación con < npx hardhat run scripts/2.upgradeV2.ts --network localhost > obteniendo el siguiente resultado:
+
+<img src="./readme-images/contract-2-result.png" alt="contract-2-result" />
+
+Podemos ver como el contrato proxy y el de admin son los mismos que anteriormente y que el que tiene una address nueva es el de la implementación.
+
+### Tarea 4.6: Probar las funcionalidades en la consola de Hardhat.
+
+Ejecutaremos < npx hardhat console --network localhost > para abrir nuestra consola de Hardhat.
+
+Para comprobar el correcto funcionamiento de la implementación ejecutaremos los siguientes comandos:
+
+<img src="./readme-images/boxV2-execution.png" alt="boxV2-execution" />
+
+El proceso es el siguiente:
+
+- Llamamos al contrato de la última impementación.
+
+- Creamos una instancia pero pasando la address del contrato proxy.
+
+- Comprobamos que el método retrieve nos devuelve el 42 que marcamos por defecto en el momento del despliegue.
+
+- Llamamos al método increment de nuestra nueva implementación.
+
+- Llamamos de nuevo al método retrieve para comprobar que increment ha sumado uno a la variable value.
