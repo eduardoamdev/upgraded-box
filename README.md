@@ -191,3 +191,127 @@ undefined
 > value
 BigNumber { value: "5" }
 ```
+
+## Tarea 2: Escribir el que será nuestro contrato acualizable (upgradeable smart contract).
+
+### Tarea 2.1: Instalar openzeppelin/hardhat-upgrades.
+
+Para ello deberemos ejecutar el comando npm i @openzeppelin/hardhat-upgrades.
+
+### Tarea 2.2: Implementar hardhat-upgrades en nuestra configuración de Hardhat.
+
+Lo importaremos en hardhat.config.ts mediante < import '@openzeppelin/hardhat-upgrades'; >
+
+### Tarea 2.3: Reemplazar el contenido del contrato Box.sol por el de un contrato acutalizable.
+
+Sustituiremos el código de nuestro contrato por el que vemos a continuación:
+
+```js
+// contracts/Box.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Box {
+    uint256 private value;
+
+    // Emitted when the stored value changes
+    event ValueChanged(uint256 newValue);
+
+    // Stores a new value in the contract
+    function store(uint256 newValue) public {
+        value = newValue;
+        emit ValueChanged(newValue);
+    }
+
+    // Reads the last stored value
+    function retrieve() public view returns (uint256) {
+        return value;
+    }
+}
+```
+
+La principal diferencia entre este código y el anterior es que, en este caso, ya no tenemos contructor. Esto se debe a que los contratos proxy carecen del constructor el cual es reemplazado por una función inicializadora a la que se llamará en el script de deploy. En este caso, la función inicializadora será store y ella será la encargada de asignarle a la variable value ev valor correspondiente en el momento del despliegue del contrato.
+
+Personalmente, recomiendo borrar las carpetas cache y artifacts y volver a ejecutar el comando < npx hardhat compile > para evitar problemas.
+
+### Tarea 2.4 Testear el contrato.
+
+Vamos a crear un test unitario para nuestro contrato. El código irá en la carpera test de nuestro proyecto y es el siguiente:
+
+```js
+// test/1.Box.test.ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box", function () {
+  let box: Contract;
+
+  beforeEach(async function () {
+    const Box = await ethers.getContractFactory("Box");
+    box = await Box.deploy();
+    await box.deployed();
+  });
+
+  it("should retrieve value previously stored", async function () {
+    await box.store(42);
+    expect(await box.retrieve()).to.equal(BigNumber.from("42"));
+
+    await box.store(100);
+    expect(await box.retrieve()).to.equal(BigNumber.from("100"));
+  });
+});
+```
+
+Aclarar que este es un test unitario común. En el no estamos tratando al contrato como un proxy.
+
+Para llevar a cabo el test ejecutarmos el comando < npx hardhat test test/1.Box.test.ts > obteniendo como resultado la siguiente respuesta:
+
+<img src="./readme-images/test-1-response.png" />
+
+## Tarea 3: Desplegar nuestro contrato como actualizable.
+
+### Tarea 3.1: Crear script de despliegue.
+
+Dentro de la carpeta scripts crearemos un archivo llamado 1.deploy_box.ts y en el pegaremos el siguiente código:
+
+```js
+// scripts/1.deploy_box.ts
+import { ethers } from "hardhat";
+import { upgrades } from "hardhat";
+
+async function main() {
+  const Box = await ethers.getContractFactory("Box");
+  console.log("Deploying Box...");
+  const box = await upgrades.deployProxy(Box, [42], { initializer: "store" });
+
+  console.log(box.address, " box(proxy) address");
+  console.log(
+    await upgrades.erc1967.getImplementationAddress(box.address),
+    " getImplementationAddress"
+  );
+  console.log(
+    await upgrades.erc1967.getAdminAddress(box.address),
+    " getAdminAddress"
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+Un detalle a tener en cuenta es que, a diferencia de lo que hicimos en el anterior despliegue (en el que utilizamos el método deploy), en este caso hemos empleado el método deployProxy de upgrades. A este método le pasamos como argumentos el contrato que vamos a desplegar, el valor de le vamos a dar al initializer (podríamos decir que este initializer es nuestro constructor) y como tercer argumento un objecto con la propiedad initializer en la que declararemos cual sera dicho método.
+
+### Tarea 3.1: Ejecutar el script de despliegue.
+
+Arrancaremos un nuevo nodo de hardhat con < npx hardhat node >.
+
+Desplegaremos el contrato con < npx hardhat run scripts/1.deploy_box.ts --network localhost >.
+
+En este caso, al ser un contrato proxy vemos en la terminal que se han desplegado tres contratos:
+
+<img src="./readme-images/proxy-deploy-1.png" alt="proxy-deploy-1" />
+
+Aquí podemos ver como tenemos el contrato proxy, el proxyAdmin y la implementación.
