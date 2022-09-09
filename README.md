@@ -574,3 +574,139 @@ El proceso es el siguiente:
 - Ejecutamos la función retrieve para obtener el valor de la variable value.
 
 - Imprimimos el valor de la variable por consola y vemos que nos da cero. Esto es debido a que el contrato de la implementación no tiene acceso a la información que se ha ido introduciendo en la versión anterior.
+
+## Tarea 5: Construir y desplegar una nueva actualización.
+
+### Tarea 5.1: Crear un nuevo contrato de actualización.
+
+Dentro de la carpeta contracts crea un nuevo archivo de nombre BoxV3.sol y pegar en él el siguiente código:
+
+```js
+// contracts/BoxV3.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "./BoxV2.sol";
+
+contract BoxV3 is BoxV2{
+    string public name;
+
+    event NameChanged(string name);
+
+    function setName(string memory _name) public {
+        name = _name;
+        emit NameChanged(name);
+    }
+}
+```
+
+Lo que hace este contrato es introducir una nueva variable llanada name de tipo string y una función llamada setName que nos permite cambiar el nombre de la variable por otro que reciba como argumento.
+
+Como podemos ver nuestro nuevo contrato BoxV3 hereda de BoxV2.
+
+### Tarea 5.2: Crear un archivo de test para la actualización.
+
+Creamos dentro de la carpeta test al que llamaremos 5.BoxProxyV3.test.ts. Dentro del archivo pegaremos este código:
+
+```js
+// test/5.BoxProxyV3.test.ts
+import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box (proxy) V3 with name", function () {
+  let box: Contract;
+  let boxV2: Contract;
+  let boxV3: Contract;
+
+  beforeEach(async function () {
+    const Box = await ethers.getContractFactory("Box");
+    const BoxV2 = await ethers.getContractFactory("BoxV2");
+    const BoxV3 = await ethers.getContractFactory("BoxV3");
+
+    //initialize with 42
+    box = await upgrades.deployProxy(Box, [42], { initializer: "store" });
+    boxV2 = await upgrades.upgradeProxy(box.address, BoxV2);
+    boxV3 = await upgrades.upgradeProxy(box.address, BoxV3);
+  });
+
+  it("should retrieve value previously stored and increment correctly", async function () {
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("42"));
+    await boxV3.increment();
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("43"));
+
+    await boxV2.store(100);
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
+  });
+
+  it("should set name correctly in V3", async function () {
+    expect(await boxV3.name()).to.equal("");
+
+    const boxname = "my Box V3";
+    await boxV3.setName(boxname);
+    expect(await boxV3.name()).to.equal(boxname);
+  });
+});
+```
+
+### Tarea 5.3: Ejecutar el test de actualización.
+
+Una vez tengamos nuestro archivo de test preparado ejecutaremos el comando < npx hardhat test test/5.BoxProxyV3.test.ts > obteniendo el siguiente resultado:
+
+<img src="./readme-images/test-3-upgradeable.png" alt="test-3-upgradeable" />
+
+### Tarea 5.3: Crear un archivo para el despliege de la actualización:
+
+Al igual que hemos hecho anteriormente crearemos en la carpeta scripts un script de despliegue, en este caso llamado 3.upgradeV3.ts. Dentro del archivo copiaremos el siguiente código:
+
+```js
+// scripts/3.upgradeV3.ts
+import { ethers } from "hardhat";
+import { upgrades } from "hardhat";
+
+const proxyAddress = "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0";
+// const proxyAddress = '0x1CD0c84b7C7C1350d203677Bb22037A92Cc7e268'
+async function main() {
+  console.log(proxyAddress, " original Box(proxy) address");
+  const BoxV3 = await ethers.getContractFactory("BoxV3");
+  console.log("upgrade to BoxV3...");
+  const boxV3 = await upgrades.upgradeProxy(proxyAddress, BoxV3);
+  console.log(boxV3.address, " BoxV3 address(should be the same)");
+
+  console.log(
+    await upgrades.erc1967.getImplementationAddress(boxV3.address),
+    " getImplementationAddress"
+  );
+  console.log(
+    await upgrades.erc1967.getAdminAddress(boxV3.address),
+    " getAdminAddress"
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+### Tarea 5.3: Desplegar la actualización:
+
+- Arrancaremos el nodo de Hardhat con < npx hardhat node >.
+
+- Desplegamos el proxy con el comando < npx hardhat run scripts/1.deploy_box.ts --network localhost >.
+
+- Desplegar la nueva implementación con < npx hardhat run scripts/2.upgradeV2.ts --network localhost >.
+
+- Para el despliegue de la nueva actualización utilizaremos el comando < npx hardhat run scripts/3.upgradeV3.ts --network localhost >. El resultado que obtendremos en este último despliegue será el siguiente.
+
+<img src="./readme-images/deploy-3-upgrade.png" alt="deploy-3-upgrade" />
+
+Al igual que ocurrió en la anterior actualización vemos como tenemos un contrato proxy que mantiene la misma address que tenía a anteriormente, un contrato de administración del proxy que también conserva su address y un contrato de implementarción con una address completamente nueva.
+
+### Tarea 5.4: Comprobar el funcionamiento de la actualización mediante la consola de comandos:
+
+Arrancaremos la terminal de comandos con < npx hardhat console --network localhost > y ejecutaremos la siguiente secuencia:
+
+<img src="./readme-images/v3-console-check.png" alt="v3-console-check" />
+
+Vemos como el contrato tiene la información del proxy y además, la función de setName que al ser ejecutada cambia el valor de la variable name.
