@@ -542,3 +542,35 @@ El proceso es el siguiente:
 - Llamamos al método increment de nuestra nueva implementación.
 
 - Llamamos de nuevo al método retrieve para comprobar que increment ha sumado uno a la variable value.
+
+### Tarea 4.7: Demostración sobre el almacenamiento de la data en el contrato proxy.
+
+A continuación vamos a demostrar cómo la data queda guardada en el contrato proxy y no en la implementación.
+
+Para ello vamos a levantar un nodo nuevo, deplegaremos tanto el proxy como nuestro BoxV2 y abriremos la consola de Hardhat.
+
+Una vez en la consola de Hardhat ejecutaremos los siguientes comandos:
+
+<img src="./readme-images/proxy-storage-demonstration.png" alt="proxy-storage-demonstration" />
+
+El proceso es el siguiente:
+
+- Llamamos al contrato y lo guardamos en una constante Box. Esta constante será la que usaremos para declarar todas nuestras instancias.
+
+- Creamos una primera instancia apuntando al proxy y la guardamos en una constante box.
+
+- Utilizamos el método retrieve de box para obtener el valor de value por defecto.
+
+- Lo imprimimos por consola para obtener el valor.
+
+- Declaramos una nueva instancia de nombre newBox empleando también la address con contrato proxy.
+
+- Usamos la función retrieve de este nuevo contraro y guardamos lo que nos devuleve en una constante.
+
+- Imprimimos la constante y vemos que el valor es el mismo que nos mostraba anteriormente. Esto se debe a que para crear la instancia hemos utilizado la address del proxy, que es el contrato que tiene la información almacenada.
+
+- En la siguiente instrucción instanciamos un nuevo contrato pero esta vez en lugar de utilizar la address del proxy vamos a emplear la de la segunda implementación.
+
+- Ejecutamos la función retrieve para obtener el valor de la variable value.
+
+- Imprimimos el valor de la variable por consola y vemos que nos da cero. Esto es debido a que el contrato de la implementación no tiene acceso a la información que se ha ido introduciendo en la versión anterior.
