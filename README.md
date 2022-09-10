@@ -192,7 +192,7 @@ undefined
 BigNumber { value: "5" }
 ```
 
-## Tarea 2: Escribir el que será nuestro contrato acualizable (upgradeable smart contract).
+## Tarea 2: Implementar el que será nuestro contrato acualizable (upgradeable smart contract).
 
 ### Tarea 2.1: Instalar openzeppelin/hardhat-upgrades.
 
@@ -269,9 +269,7 @@ Para llevar a cabo el test ejecutarmos el comando < npx hardhat test test/1.Box.
 
 <img src="./readme-images/test-1-response.png" />
 
-## Tarea 3: Desplegar nuestro contrato como actualizable.
-
-### Tarea 3.1: Hacer un test del contrato desplegado como proxy.
+### Tarea 2.5: Hacer un test del contrato desplegado como proxy.
 
 Vamos a crear un archivo llamado 2.BoxProxy.test.ts en la carpeta test.
 
@@ -311,7 +309,7 @@ El test debe devolvernos el siguiente resultado:
 
 <img src="./readme-images/test-1-proxy.png" alt="test-1-proxy" />
 
-### Tarea 3.2: Crear script de despliegue.
+### Tarea 2.6: Crear script de despliegue.
 
 Dentro de la carpeta scripts crearemos un archivo llamado 1.deploy_box.ts y en el pegaremos el siguiente código:
 
@@ -344,7 +342,7 @@ main().catch((error) => {
 
 Un detalle a tener en cuenta es que, a diferencia de lo que hicimos en el anterior despliegue (en el que utilizamos el método deploy), en este caso hemos empleado el método deployProxy de upgrades. A este método le pasamos como argumentos el contrato que vamos a desplegar, el valor de le vamos a dar al initializer (podríamos decir que este initializer es nuestro constructor) y como tercer argumento un objecto con la propiedad initializer en la que declararemos cual sera dicho método.
 
-### Tarea 3.3: Ejecutar el script de despliegue.
+### Tarea 2.7: Ejecutar el script de despliegue.
 
 Arrancaremos un nuevo nodo de hardhat con < npx hardhat node >.
 
@@ -356,15 +354,15 @@ En este caso, al ser un contrato proxy vemos en la terminal que se han desplegad
 
 Aquí podemos ver como tenemos el contrato proxy, el proxyAdmin y la implementación.
 
-### Tarea 3.4: Comprobar con la consola el funcionamiento del contrato.
+### Tarea 2.8: Comprobar con la consola el funcionamiento del contrato.
 
 El proceso es similar al descrito anteriormente. En este caso hay que tener en cuenta que debemos apuntar al contrato proxy y que nos devolverá el valor que le pasamos con argumento de upgrades.deployProxy (en el ejemplo le hemos pasado el número 42).
 
 <img src="./readme-images/proxy-1-console.png" alt="proxy-1-console" />
 
-## Tarea 4: Actualizar el smart contract a BoxV2.
+## Tarea 3: Actualizar el smart contract a BoxV2.
 
-### Tarea 4.1: Crear un archivo con el código de la nueva implementación.
+### Tarea 3.1: Crear un archivo con el código de la nueva implementación.
 
 Crearemos un archivo llamado BoxV2.sol y pegaremos en el el siguiente código:
 
@@ -375,19 +373,21 @@ pragma solidity ^0.8.0;
 
 import "./Box.sol";
 
-contract BoxV2 is Box{
+contract BoxV2 is Box {
     // Increments the stored value by 1
-    function increment() public {
-        store(retrieve()+1);
+    function increment() public virtual {
+        store(retrieve() + 1);
     }
 }
 ```
 
 En esta actualización del contrato vamos a implementar un nuevo método que increméntará en uno el valor de la variable value.
 
+Podemos ver cómo a la función increment le hemos añadido el modificador virtual. Esto es debido a que en la siguiente versión BoxV3 sobreescribiremos este método.
+
 La idea es que BoxV2 heredará del contrato Box.
 
-### Tarea 4.2: Testear esta nueva implementación como un contrato normal.
+### Tarea 3.2: Testear esta nueva implementación como un contrato normal.
 
 En el directorio test crearemos un archivo llamado 3.BoxV2.test.ts y pegaremos el siguiente código:
 
@@ -426,7 +426,7 @@ Para lanzar el test ejecutaremos el comando < npx hardhat test test/3.BoxV2.test
 
 <img src="./readme-images/test-2-normal.png" alt="test-2-normal" />
 
-### Tarea 4.3: Testear esta nueva implementación como un contrato actualizable.
+### Tarea 3.3: Testear esta nueva implementación como un contrato actualizable.
 
 Creamos en el directorio test un archivo llamado 4.BoxProxyV2.test.ts y copiamos el siguiente código:
 
@@ -475,7 +475,7 @@ Tras ejecutar el comando npx hardhat test test/4.BoxProxyV2.test.ts obtendremos 
 
 <img src="./readme-images/test-2-upgradeable.png" alt="test-2-upgradeable" />
 
-### Tarea 4.4: Crear el script de despliege para nuestra implementación.
+### Tarea 3.4: Crear el script de despliege para nuestra implementación.
 
 Creamos en la carpeta scripts un archivo llamado 2.upgradeV2.ts.
 
@@ -511,7 +511,7 @@ main().catch((error) => {
 
 Vemos como guardamos en una constante la address de nuestro contrato proxy para posteriormente pasársela al método upgradeProxy junto con la instancia de la nueva implementación.
 
-### Tarea 4.5: Desplegar la nueva implementación como upgrade de Box.sol.
+### Tarea 3.5: Desplegar la nueva implementación como upgrade de Box.sol.
 
 - Arrancaremos el nodo de Hardhat con < npx hardhat node >.
 
@@ -523,7 +523,7 @@ Vemos como guardamos en una constante la address de nuestro contrato proxy para 
 
 Podemos ver como el contrato proxy y el de admin son los mismos que anteriormente y que el que tiene una address nueva es el de la implementación.
 
-### Tarea 4.6: Probar las funcionalidades en la consola de Hardhat.
+### Tarea 3.6: Probar las funcionalidades en la consola de Hardhat.
 
 Ejecutaremos < npx hardhat console --network localhost > para abrir nuestra consola de Hardhat.
 
@@ -543,7 +543,7 @@ El proceso es el siguiente:
 
 - Llamamos de nuevo al método retrieve para comprobar que increment ha sumado uno a la variable value.
 
-### Tarea 4.7: Demostración sobre el almacenamiento de la data en el contrato proxy.
+### Tarea 3.7: Demostración sobre el almacenamiento de la data en el contrato proxy.
 
 A continuación vamos a demostrar cómo la data queda guardada en el contrato proxy y no en la implementación.
 
@@ -575,9 +575,9 @@ El proceso es el siguiente:
 
 - Imprimimos el valor de la variable por consola y vemos que nos da cero. Esto es debido a que el contrato de la implementación no tiene acceso a la información que se ha ido introduciendo en la versión anterior.
 
-## Tarea 5: Construir y desplegar una nueva actualización.
+## Tarea 4: Construir y desplegar una nueva actualización.
 
-### Tarea 5.1: Crear un nuevo contrato de actualización.
+### Tarea 4.1: Crear un nuevo contrato de actualización.
 
 Dentro de la carpeta contracts crea un nuevo archivo de nombre BoxV3.sol y pegar en él el siguiente código:
 
@@ -588,7 +588,7 @@ pragma solidity ^0.8.0;
 
 import "./BoxV2.sol";
 
-contract BoxV3 is BoxV2{
+contract BoxV3 is BoxV2 {
     string public name;
 
     event NameChanged(string name);
@@ -597,10 +597,16 @@ contract BoxV3 is BoxV2{
         name = _name;
         emit NameChanged(name);
     }
+
+    function increment() public override {
+        store(retrieve() + 10);
+    }
 }
 ```
 
 Lo que hace este contrato es introducir una nueva variable llanada name de tipo string y una función llamada setName que nos permite cambiar el nombre de la variable por otro que reciba como argumento.
+
+También vemos cómo se ha declarado un método increment cuyo propósito es sobreescribir la de la versión 2. De esta manera si el increment del V2 incrementaba el valor de la variable value en 1 esta nueva versión lo incrementa en 10.
 
 Como podemos ver nuestro nuevo contrato BoxV3 hereda de BoxV2.
 
@@ -633,7 +639,7 @@ describe("Box (proxy) V3 with name", function () {
   it("should retrieve value previously stored and increment correctly", async function () {
     expect(await boxV2.retrieve()).to.equal(BigNumber.from("42"));
     await boxV3.increment();
-    expect(await boxV2.retrieve()).to.equal(BigNumber.from("43"));
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("52"));
 
     await boxV2.store(100);
     expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
@@ -709,4 +715,177 @@ Arrancaremos la terminal de comandos con < npx hardhat console --network localho
 
 <img src="./readme-images/v3-console-check.png" alt="v3-console-check" />
 
-Vemos como el contrato tiene la información del proxy y además, la función de setName que al ser ejecutada cambia el valor de la variable name.
+Vemos la función de setName que al ser ejecutada cambia el valor de la variable name.
+
+Vamos a ejecutar otra secuencia más en la misma consola y empleando la misma instancia con el objetivo de comprabar la sobreescritura del método increment.
+
+<img src="./readme-images/v3-console-check-2.png" alt="v3-console-check-2" />
+
+Como podemos ver el incremento de value es de diez en lugar de uno. Esto significa que la actualización funciona perfectamente.
+
+## Tarea 6: Crear y ejecutar un nuevo contrato de actualización con una función de preparado (prepareUpgrade).
+
+## Tarea 6.1: Crear un archivo BoxV4.sol y pegar en él el siguiente código:
+
+```js
+// contracts/BoxV4.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "./BoxV2.sol";
+
+contract BoxV4 is BoxV2 {
+    string private name;
+
+    event NameChanged(string name);
+
+    function setName(string memory _name) public {
+        name = _name;
+        emit NameChanged(name);
+    }
+
+    function getName() public view returns (string memory) {
+        return string(abi.encodePacked("Name: ", name));
+    }
+}
+```
+
+Vemos que esta actualización aporta una función getName() que devuelve el un string con el contenido de la variable name.
+
+Hay un detalle importante que debemos tener en cuenta. Este contrato, como se puede ver, hereda de BoxV2, esto significa que no tendrá los métodos de BoxV3.
+
+Si recordamos, el método setName() ya estaba declarado en el contrato BoxV3 pero al heredar este BoxV4 de BoxV2 necesitamos declararlo de nuevo ya que de lo contrario lo perderíamos.
+
+### Tarea 6.2: Crear un test para el contrato:
+
+Dentro de la carpeta test crearemos un archivo llamado 6.BoxProxyV4.test.ts y pegaremos en el este código:
+
+```js
+// test/6.BoxProxyV4.test.ts
+import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
+import { Contract, BigNumber } from "ethers";
+
+describe("Box (proxy) V4 with getName", function () {
+  let box: Contract;
+  let boxV2: Contract;
+  let boxV3: Contract;
+  let boxV4: Contract;
+
+  beforeEach(async function () {
+    const Box = await ethers.getContractFactory("Box");
+    const BoxV2 = await ethers.getContractFactory("BoxV2");
+    const BoxV3 = await ethers.getContractFactory("BoxV3");
+    const BoxV4 = await ethers.getContractFactory("BoxV4");
+
+    //initialize with 42
+    box = await upgrades.deployProxy(Box, [42], { initializer: "store" });
+    boxV2 = await upgrades.upgradeProxy(box.address, BoxV2);
+    boxV3 = await upgrades.upgradeProxy(box.address, BoxV3);
+    boxV4 = await upgrades.upgradeProxy(box.address, BoxV4);
+  });
+
+  it("should retrieve value previously stored and increment correctly", async function () {
+    expect(await boxV4.retrieve()).to.equal(BigNumber.from("42"));
+    await boxV4.increment();
+    expect(await boxV4.retrieve()).to.equal(BigNumber.from("43"));
+
+    await boxV2.store(100);
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
+  });
+
+  it("should setName and getName correctly in V4", async function () {
+    //name() removed, getName() now
+    // expect(boxV4).to.not.have.own.property("name")
+    expect(boxV4.name).to.be.undefined;
+    expect(await boxV4.getName()).to.equal("Name: ");
+
+    const boxname = "my Box V4";
+    await boxV4.setName(boxname);
+    expect(await boxV4.getName()).to.equal("Name: " + boxname);
+  });
+});
+```
+
+### Tarea 6.3: Ejecutar el test.
+
+Ejecutaremos el comando < npx hardhat test test/6.BoxProxyV4.test.ts > obteniendo el siguiente resultado:
+
+<img src="./readme-images/v4-test-result.png" alt="v4-test-result" />
+
+### Tarea 6.4: Escribir script para el preparado de la actualización:
+
+En la carpeta scripts creamos un nuevo archivo llamado 4.prepareV4.ts y pegamos en el el siguiente código:
+
+```js
+// scripts/4.prepareV4.ts
+import { ethers } from "hardhat";
+import { upgrades } from "hardhat";
+
+/* const proxyAddress = "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0"; */
+
+const proxyAddress = "0xE7C274005713912aA3639B99Ab3E0435e24fA44f";
+
+async function main() {
+  console.log(proxyAddress, " original Box(proxy) address");
+  const BoxV4 = await ethers.getContractFactory("BoxV4");
+  console.log("Preparing upgrade to BoxV4...");
+  const boxV4Address = await upgrades.prepareUpgrade(proxyAddress, BoxV4);
+  console.log(boxV4Address, " BoxV4 implementation contract address");
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+Como podemos ver, donde en scripts anteriores utilizábamos upgradeProxy ahora vamos a emplear prepareUpgrade.
+
+La diferencia fundamental entre ambos métodos es la siguiente:
+
+El método upgradeProxy realiza dos acciones:
+
+- Despliega el contrato de implementación.
+
+- Llama al método upgrade del contrato de administración y le pasa la implementación para que la ejecute en el proxy.
+
+El método prepateUgrade realiza tan sólo la primera de las dos acciones que ejecuta upgradeProxy. La segunda de ellas la deberá hacer el owner de manera manual.
+
+Es importante prestar atención a la siguiente línea del script:
+
+```js
+const boxV4Address = await upgrades.prepareUpgrade(proxyAddress, BoxV4);
+```
+
+En ella podemos ver como upgrades.prepareUpgrade() recibe dos argumentos. El primero de ellos es la address del proxy y el segundo en contrato de implementación para esta nueva versión. De esta manera el contrato de administración del proxy podrá implementar la actualización cuando nosotros se lo indiquemos.
+
+### Tarea 6.5: Ejecutar la actualización:
+
+El comando que debemos ejecutar es < npx hardhat run scripts/4.prepareV4.ts --network localhost >
+
+Si hemos echado abajo nuestro nodo de Hardhat tendremos que ejecutar los tres primeros scripts previamente, en caso contrario con ejecutar únicamente el correspondiente a esta nueva actualización será suficiente.
+
+Tras ejecutar el script obtendremos por la terminal el siguiente resultado:
+
+<img src="./readme-images/prepare-v4.png" alt="prepare-v4" />
+
+### Tarea 6.6: Probar la actualización en la consola de Hardhat:
+
+Como hemos comentado anteriormente, la actualización se debe realizar en dos pasos:
+
+- Despliegue del contrato de implementación.
+
+- Agregación manual al proxy por medio del contrato de administración.
+
+Con lo que hemos hecho solo hemos implementado el primer paso por lo que nos dará un error.
+
+Para comprobarlo, ejecutaremos los siguientes comandos.
+
+<img src="./readme-images/check-v4.png" alt="check-v4" />
+
+Nos dará un error el nuestra consola de Hardhat y otro en el nodo como el que mostramos a continuación:
+
+<img src="./readme-images/check-v4-error.png" alt="check-v4-error" />
+
+En la siguiente tarea desplegaremos en la testnet de Ropsten y veremos como utilizar el contrato de administración para agregar manualmente una implementación a nuestro proxy.

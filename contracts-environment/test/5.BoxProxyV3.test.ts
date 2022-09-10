@@ -22,7 +22,7 @@ describe("Box (proxy) V3 with name", function () {
   it("should retrieve value previously stored and increment correctly", async function () {
     expect(await boxV2.retrieve()).to.equal(BigNumber.from("42"));
     await boxV3.increment();
-    expect(await boxV2.retrieve()).to.equal(BigNumber.from("43"));
+    expect(await boxV2.retrieve()).to.equal(BigNumber.from("52"));
 
     await boxV2.store(100);
     expect(await boxV2.retrieve()).to.equal(BigNumber.from("100"));
