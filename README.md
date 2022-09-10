@@ -889,3 +889,177 @@ Nos dará un error el nuestra consola de Hardhat y otro en el nodo como el que m
 <img src="./readme-images/check-v4-error.png" alt="check-v4-error" />
 
 En la siguiente tarea desplegaremos en la testnet de Ropsten y veremos como utilizar el contrato de administración para agregar manualmente una implementación a nuestro proxy.
+
+## Tarea 7: Desplegar nuestro proxy con todas sus actualizaciones en la testnet de Ropsten.
+
+### Tarea 7.1: Obtener una url para el despliegue:
+
+En mi opinión, una buena opción es apuntar aun nodo de Infura.
+
+Para obtener una url nos dirigiremos a la página de Infura en el enlace < https://infura.io/ >.
+
+En la siguiente imágen mostramos dónde obtendríamos esta dirección de Ropsten:
+
+<img src="./readme-images/infura.png" alt="infura" />
+
+### Tarea 7.2: Preparar cuenta de Metamask en la red de Ropsten:
+
+- Descargaremos metamask en < https://metamask.io/ >
+
+- Crearmos nuestra cuenta.
+
+- Configuramos Metamask para que muestre las redes de pruebas entre las cuales se encontrará Ropsten.
+
+- Cambiamos de la red principal de Ethereum a Ropsten.
+
+### Tarea 7.3: Obtener fondos de la red de Ropsten:
+
+- Desde Metamask copiaremos la dirección pública de nuestra wallet en el portapapeles.
+
+- Nos dirigiremos al sitio web de la faucet de Ropsten: < https://faucet.egorfine.com/ >
+
+- Introduciremos la dirección pública de nuestra cuenta para recibir ETH de la red de pruebas de Ropsten (estos ETH no tienen valor económico).
+
+Si hemos hecho bien todos los pasos en unos segundos recibiremos nuestros ETH de la red de pruebas.
+
+<img src="./readme-images/ropsten-eth.png" alt="ropsten-eth" />
+
+### Tarea 7.4: Configurar el archivo hardhat.config.ts para desplegar en la testnet.
+
+Nota: En este tutorial voy a mostrar tanto la clave privada del owner del contrato como la dirección del nodo de infura ya que tanto la wallet como el nodo se utilizan sólamente con propósito educativo y no hay fondos reales impllicados. El procedimiento normal de trabajo sería importar estos parámetros como variables de entorno.
+
+Dentro del archivo hardhat.config.ts susutituimos el código por el que mostramos a continuación:
+
+```js
+import { HardhatUserConfig } from "hardhat/config";
+import "@openzeppelin/hardhat-upgrades";
+import "@nomicfoundation/hardhat-toolbox";
+
+const config: HardhatUserConfig = {
+  solidity: "0.8.9",
+  networks: {
+    ropsten: {
+      url: "https://ropsten.infura.io/v3/e9d0dff95e834a47a72f1a111b2e98bd",
+      accounts: [
+        "7a652ec2674749b3b5eded5df8cb88ca8837dc6f5f07c629d99bafe15071a65f",
+      ],
+    },
+  },
+};
+
+export default config;
+```
+
+### Tarea 7.5: Desplegar el proxy en Ropsten.
+
+Desde la terminal, y ubicados dentro del directorio de nuestro proyecto, ejecutaremos el comando < npx hardhat run scripts/1.deploy_box.ts --network ropsten >
+
+<img src="./readme-images/v1-testnet-deploy.png" alt="v1-testnet-deploy" />
+
+Este despliegue nos devuelve la address del proxy y un error en el que indica que ese contrato no parece ser de tipo proxy. Yo, personalmente, ignoré ese error y seguí adelante.
+
+### Tarea 7.6: Comprobar el proxy en Ropsten mediante la consola de Hardhat.
+
+Para abrir una consola que interactúe con la red de Ropsten ejecutaremos el comando < npx hardhat console --network ropsten >.
+
+Una vez abierta ejecutaremos los siguientes comandos:
+
+<img src="./readme-images/v1-testnet-check.png" alt="v1-testnet-check" />
+
+Vemos como a la hora de instanciar en contrato pasamos la address de nuestro proxy de Ropsten.
+
+Por lo demás todo es igual que el proceso que hicimos en localhost.
+
+### Tarea 7.7: Desplegar BoxV2 en Ropsten.
+
+Nos dirigimos a nuestro archivo 2.upgradeV2.ts para modificar la constante proxyAddress (ya que esta tiene almacenada la address de nuestro proxy local) e introducir la de nuestro proxy de Ropsten.
+
+```js
+const proxyAddress = "0xcEe34980DBa90f396387Bb7D142cddcA5EF459cd";
+```
+
+En mi caso es esta address pero a vosotros os habrá devuelto otra diferente.
+
+Una vez hecha la configuración ejecutaremos el despliegue con el comando < npx hardhat run scripts/2.upgradeV2.ts --network ropsten >
+
+Si todo ha ido bien nos devolverá las address del proxy del proxyAdmin y de la implementación.
+
+<img src="./readme-images/v2-testnet-deploy.png" alt="v2-testnet-deploy" />
+
+### Tarea 7.8: Comprobar BoxV2 en Ropsten mediante la consola de Hardhat.
+
+Para hacer esta comprobación ejecutaremos los siguientes comandos:
+
+<img src="./readme-images/v2-testnet-check.png" alt="v2-testnet-check" />
+
+Vemos como se ha instanciado el contrato BoxV2 y el método increment ha funcionado correctamente.
+
+### Tarea 7.9: Desplegar BoxV3 en Ropsten.
+
+Al igual que hicimos en el caso de BoxV2, nos dirigimos a nuestro archivo de despliegue (en este caso 3.upgradeV3.ts) para modificar la constante proxyAddress e introducir la de nuestro proxy de Ropsten.
+
+Después, ejecutaremos el despliegue con el comando < npx hardhat run scripts/3.upgradeV3.ts --network ropsten >
+
+Tras ejecutarlo nos devolverá las address del proxy del proxyAdmin y de la implementación.
+
+<img src="./readme-images/v3-testnet-deploy.png" alt="v3-testnet-deploy" />
+
+### Tarea 7.10: Comprobar BoxV3 en Ropsten mediante la consola de Hardhat.
+
+Vamos a comprobar en primer lugar el método setName() para confirmar que la nueva implementación se ha efectuado correctamente:
+
+<img src="./readme-images/v3-testnet-check-name.png" alt="v3-testnet-check-name" />
+
+Además, vamos a comprobar que se ha actualizado el método increment:
+
+<img src="./readme-images/v3-testnet-check-increment.png" alt="v3-testnet-check-increment" />
+
+### Tarea 7.11: Desplegar la implementación de BoxV4 en Ropsten.
+
+Al igual que hicimos anteriormente, nos dirigimos a nuestro archivo de despliegue (en este caso 4.prepareV4.ts) para modificar la constante proxyAddress e introducir la de nuestro proxy de Ropsten.
+
+Después, ejecutaremos el despliegue con el comando < npx hardhat run scripts/4.prepareV4.ts --network ropsten >
+
+Tras ejecutarlo nos informará de que tenemos una nueva implementación cuya address nos proporcionará.
+
+<img src="./readme-images/v4-testnet-prepare.png" alt="v4-testnet-prepare" />
+
+Como ya vimos en el ejemplo desplegado en local, cuando llamemos a un método de la implementación nos dará un error ya que está no está agregada al proxy todavía.
+
+<img src="./readme-images/v4-testnet-error.png" alt="v4-testnet-error" />
+
+Para añadir la implementación al proxy nos dirigiremos a https://ropsten.etherscan.io/
+
+Una vez allí introduciremos la address de nuestro contrato de administración de proxy (cada uno la suya).
+
+<img src="./readme-images/ropsten-landing.png" alt="ropsten-landing" />
+
+Una vez hayamos accedido al panel de nuestro contrato de administración entraremos en contract (en la parte central con el check verde).
+
+<img src="./readme-images/ropsten-contract-panel.png" alt="ropsten-contract-panel.png" />
+
+Después pulsaremos write contract.
+
+<img src="./readme-images/ropsten-contract-write-button.png" alt="ropsten-contract-write-button.png" />
+
+Una vez hayamos pulsado write contract accederemos a un formulario.
+
+En primer lugar conectaremos nuestra wallet (la del owner del proxy) para después desplegar el acordeon upgrade y rellenar la address del proxy y la de la nueva implementación.
+
+<img src="./readme-images/ropsten-contract-upgrade.png" alt="ropsten-contract-upgrade.png" />
+
+Una vez hayamos rellenado los campo pulsamos write y firmamos la transacción con Metamask.
+
+### Tarea 7.11: Comprobar la implementación de BoxV4 en Ropsten con la consola de Hardhat.
+
+Vamos a comproba en primer lugar, el método getName(). Si se ejecuta correctamente querrá decir que la implementación ha sido exitosa:
+
+<img src="./readme-images/v4-check-getName.png" alt="v4-check-getName.png" />
+
+También vamos a comprobar que el método increment() ha pasado al estado de la versión 2 (sólo incrementa de uno en uno):
+
+<img src="./readme-images/v4-check-increment.png" alt="v4-check-increment.png" />
+
+## Conclusión:
+
+La librería para upgrades de Open Zeppelin me parece que puede ser una herramiento importante ya que el control de las actualizaciones de los contratos puede ser clave para el desarrollo de cualquier proyecto de este tipo.
